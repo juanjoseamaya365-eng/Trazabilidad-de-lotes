@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+
+import React, { useState, useMemo, useEffect } from 'react';
 import type { CoffeeLot, Sale, Cost } from './types';
 import { initialLots, initialSales, initialCosts } from './initialData';
 import Header from './components/Header';
@@ -6,11 +7,35 @@ import DashboardSection from './components/DashboardSection';
 import LotListView from './components/LotListView';
 import LotDetailView from './components/LotDetailView';
 
+// --- Helper Functions for Local Storage ---
+const getInitialState = <T,>(storageKey: string, fallbackData: T): T => {
+  try {
+    const item = window.localStorage.getItem(storageKey);
+    return item ? JSON.parse(item) : fallbackData;
+  } catch (error) {
+    console.error(`Error reading from localStorage key “${storageKey}”:`, error);
+    return fallbackData;
+  }
+};
+
 const App: React.FC = () => {
-  const [coffeeLots, setCoffeeLots] = useState<CoffeeLot[]>(initialLots);
-  const [sales, setSales] = useState<Sale[]>(initialSales);
-  const [costs, setCosts] = useState<Cost[]>(initialCosts);
+  const [coffeeLots, setCoffeeLots] = useState<CoffeeLot[]>(() => getInitialState('coffeeTraceability_lots', initialLots));
+  const [sales, setSales] = useState<Sale[]>(() => getInitialState('coffeeTraceability_sales', initialSales));
+  const [costs, setCosts] = useState<Cost[]>(() => getInitialState('coffeeTraceability_costs', initialCosts));
   const [selectedLotId, setSelectedLotId] = useState<string | null>(null);
+
+  // --- Effects to persist state to localStorage ---
+  useEffect(() => {
+    window.localStorage.setItem('coffeeTraceability_lots', JSON.stringify(coffeeLots));
+  }, [coffeeLots]);
+  
+  useEffect(() => {
+    window.localStorage.setItem('coffeeTraceability_sales', JSON.stringify(sales));
+  }, [sales]);
+
+  useEffect(() => {
+    window.localStorage.setItem('coffeeTraceability_costs', JSON.stringify(costs));
+  }, [costs]);
 
   // --- CRUD Operations ---
 
